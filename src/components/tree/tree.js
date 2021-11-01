@@ -53,6 +53,8 @@ class Tree extends Component {
         const nodesCopy = [];
         for (let i = 0; i < nodes.length; i++) {
             const { children, title, id, type, page_id } = nodes[i];
+            console.log("page_id");
+            console.log(page_id);
             const hasChildren = children !== undefined;
             const node_id = location ? `${location}.${i + 1}` : `${i + 1}`;
             nodesCopy[i] = {
@@ -123,6 +125,7 @@ class Tree extends Component {
             if (changingNode.type === "Q") {
                 type = "A"
             }
+            console.log(changingNode)
             changingNode.children = [
                 ...changingNode.children,
                 {
@@ -181,7 +184,9 @@ class Tree extends Component {
 
     saveState() {
         this.setState({ savedNodes: this.initializedСopy(this.state.nodes) });
-        let to_be_saved_nodes = this.state.nodes 
+        let to_be_saved_nodes = this.state.nodes
+        console.log("this.state.nodes") 
+        console.log(this.state.nodes) 
         to_be_saved_nodes[0].removedNodes = this.state.removedNodes
         updateQuestions(to_be_saved_nodes);
         this.setState({removedNodes: []})
