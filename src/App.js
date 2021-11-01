@@ -15,7 +15,8 @@ function format_tree_data(tree_data) {
           "title": answer.answer,
           "id": answer.id,
           "type": "A",
-          "children": format_tree_data(answer.next_question)
+          "children": format_tree_data(answer.next_question),
+          "page_id": tree_data.page_id
         })
       }
     )
