@@ -2,34 +2,9 @@ import React, { Component } from "react";
 import "./App.css";
 import Tree from "./components/tree";
 import axios from 'axios';
+import Navbar from "./components/Navbar";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-function format_tree_data(tree_data) {
-  var children = []
-  if (tree_data === null){
-    return []
-  }
-  if (tree_data.answers !== undefined) {
-    tree_data.answers.forEach(
-      function (answer) {
-        children.push({
-          "title": answer.answer,
-          "id": answer.id,
-          "type": "A",
-          "children": format_tree_data(answer.next_question),
-          "page_id": tree_data.page_id
-        })
-      }
-    )
-  }
-  var question = {
-    "title": tree_data.question,
-    "children": children,
-    "id": tree_data.id,
-    "type": "Q",
-    "page_id": tree_data.page_id
-  }
-  return [question]
-}
 
 class App extends Component {
   state = {
@@ -38,18 +13,28 @@ class App extends Component {
 
 
   componentDidMount() {
-    axios.get(`https://serene-brook-03900.herokuapp.com/questionget?question_id=2`)
+    axios.get(`https://serene-brook-03900.herokuapp.com/pagesget`)
       .then(res => {
-        var Tree_Data = res.data;
-        this.setState({ tree_data: format_tree_data(Tree_Data) })
-      })
+        var pages = res.data;
+        this.setState({ pages: pages })
+      });
   }
 
   render() {
-
-    console.log(this.state.tree_data);
+    let pages = this.state.pages ? this.state.pages : [];
+    let root_path = pages.length > 0 ? <Route path='/' exact element={<Tree page={pages[0]} />} /> : <Route path='/' element={<div></div>} />
     return (
-      <Tree data={this.state.tree_data} />
+      <Router>
+        <Navbar pages={pages} />
+        <Routes>
+          {root_path}
+          {
+            pages.map(page => {
+              return <Route path={`/${page[1]}`} exact element={<Tree page={page} />} />
+            })
+          }
+        </Routes>
+      </Router>
     );
   }
 }

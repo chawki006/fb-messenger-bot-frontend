@@ -13,12 +13,49 @@ function updateQuestions(tree) {
             })
 }
 
+function format_tree_data(tree_data) {
+    var children = []
+    if (tree_data === null) {
+        return []
+    }
+    if (tree_data.answers !== undefined) {
+        tree_data.answers.forEach(
+            function (answer) {
+                children.push({
+                    "title": answer.answer,
+                    "id": answer.id,
+                    "type": "A",
+                    "children": format_tree_data(answer.next_question),
+                    "page_id": tree_data.page_id
+                })
+            }
+        )
+    }
+    var question = {
+        "title": tree_data.question,
+        "children": children,
+        "id": tree_data.id,
+        "type": "Q",
+        "page_id": tree_data.page_id
+    }
+    return [question]
+}
 class Tree extends Component {
 
     constructor(props) {
         super(props);
+        let page = this.props.page;
+        axios.get(`https://serene-brook-03900.herokuapp.com/workflows?page_id=${page[0]}`)
+            .then(res => {
+                let root_question_id = res.data[0];
+                return axios.get(`https://serene-brook-03900.herokuapp.com/questionget?question_id=${root_question_id}`)
+            })
+            .then(res => {
+                let Tree_Data = res.data;
+                this.setState({ tree_data: format_tree_data(Tree_Data) })
+            });
         this.state = {
-            nodes: this.initializedСopy(this.props.data),
+            nodes: this.initializedСopy([]),
             savedNodes: [],
             removedNodes: []
         }
@@ -33,9 +70,10 @@ class Tree extends Component {
     }
 
     componentDidUpdate(prevProps) {
-        if (prevProps.data.length === 0) {
+        console.log(this.state);
+        if (this.state.nodes.length === 0) {
             this.setState({
-                nodes: this.initializedСopy(this.props.data),
+                nodes: this.initializedСopy(this.state.tree_data),
                 savedNodes: [],
             })
             this.changeTitle = this.changeTitle.bind(this);
@@ -53,8 +91,6 @@ class Tree extends Component {
         const nodesCopy = [];
         for (let i = 0; i < nodes.length; i++) {
             const { children, title, id, type, page_id } = nodes[i];
-            console.log("page_id");
-            console.log(page_id);
             const hasChildren = children !== undefined;
             const node_id = location ? `${location}.${i + 1}` : `${i + 1}`;
             nodesCopy[i] = {
@@ -185,11 +221,11 @@ class Tree extends Component {
     saveState() {
         this.setState({ savedNodes: this.initializedСopy(this.state.nodes) });
         let to_be_saved_nodes = this.state.nodes
-        console.log("this.state.nodes") 
-        console.log(this.state.nodes) 
+        console.log("this.state.nodes")
+        console.log(this.state.nodes)
         to_be_saved_nodes[0].removedNodes = this.state.removedNodes
         updateQuestions(to_be_saved_nodes);
-        this.setState({removedNodes: []})
+        this.setState({ removedNodes: [] })
     }
 
     loadState() {
